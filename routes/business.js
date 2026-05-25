@@ -13,7 +13,7 @@ const {
 // GET /api/business/:id
 router.get("/:id", authMiddleware, getBusiness);
 
-router.get("/review/:id", authMiddleware, getBusinessById);
+router.get("/review/:id", getBusinessById);
 
 // POST /api/business
 router.post("/", authMiddleware, createBusiness);
