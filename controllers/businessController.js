@@ -81,7 +81,7 @@ const getBusinessById = async (req, res) => {
       [userId],
     );
 
-    console.log(userResult.rows[0]);
+    // console.log(userResult.rows[0]);
 
     const user = userResult.rows[0];
 
@@ -100,7 +100,7 @@ const getBusinessById = async (req, res) => {
       const totalReviews = parseInt(reviewCountResult.rows[0].total_reviews);
 
       // BLOCK USER
-      if (totalReviews >= 1) {
+      if (totalReviews >= 15) {
         return res.status(403).json({
           success: false,
           upgradeRequired: true,

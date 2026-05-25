@@ -13,12 +13,13 @@ const {
 // GET /api/business/:id
 router.get("/:id", authMiddleware, getBusiness);
 
+
+//public oute for review purpose not authentication use here
 router.get("/review/:id", getBusinessById);
 
 // POST /api/business
 router.post("/", authMiddleware, createBusiness);
   
-
 
 // GET /api/business/:id/qr
 router.get('/:id/qr', authMiddleware,  getQRCode);

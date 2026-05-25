@@ -120,7 +120,7 @@ Return ONLY the review text.
 
     // Business owner ka user_id
     const user_id = userByBusiness.rows[0].user_id;
-    console.log("yeh ho kyu nahi rha ----------------->", userByBusiness);
+    // console.log("yeh ho kyu nahi rha ----------------->", userByBusiness);
 
     const reviewResult = await pool.query(
       `
@@ -149,6 +149,7 @@ Return ONLY the review text.
     });
   }
 };
+
 
 const trackCopied = async (req, res) => {
   const { id } = req.params;
@@ -252,12 +253,59 @@ const saveFeedback = async (req, res) => {
   }
 };
 
+
 const getReviewsByBusiness = async (req, res) => {
   try {
     const { businessId } = req.params;
 
-    console.log(businessId);
+    console.log("ha yeh chl rha hai ---> ",businessId);
 
+    // Step 1: Business ka owner/user nikalo
+    const businessResult = await pool.query(
+      `
+      SELECT user_id
+      FROM businesses
+      WHERE id = $1
+      `,
+      [businessId],
+    );
+
+    // Agar business exist nahi karta
+    if (businessResult.rows.length === 0) {
+      return res.status(404).json({
+        error: "Business not found",
+      });
+    }
+
+    const userId = businessResult.rows[0].user_id;
+
+    // Step 2: User ka plan check karo
+    const userResult = await pool.query(
+      `
+      SELECT plan_type
+      FROM users
+      WHERE id = $1
+      `,
+      [userId],
+    );
+
+    // Agar user nahi mila
+    if (userResult.rows.length === 0) {
+      return res.status(404).json({
+        error: "User not found",
+      });
+    }
+
+    const userPlan = userResult.rows[0].plan_type;
+
+    // Step 3: Agar free plan hai to reviews mat bhejo
+    if (userPlan === "free") {
+      return res.status(403).json({
+        error: "Upgrade to Pro to access reviews",
+      });
+    }
+
+    // Step 4: Agar pro hai to reviews bhejo
     const result = await pool.query(
       `
       SELECT *
