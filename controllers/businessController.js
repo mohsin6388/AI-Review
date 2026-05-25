@@ -242,7 +242,7 @@ const createBusiness = async (req, res) => {
     await client.query("COMMIT");
 
     // Generate QR code
-    const reviewPageUrl = `http://localhost:3000/review/${business.id}`;
+    const reviewPageUrl = `https://ai-reviews-frontend-wxh3.onrender.com/review/${business.id}`;
     // Save url
     // save again in same table
     await client.query(
