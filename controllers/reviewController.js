@@ -17,9 +17,9 @@ const generateReview = async (req, res) => {
     });
   }
 
-  if (rating < 4) {
+  if (rating < 2) {
     return res.status(400).json({
-      error: "AI review generation only for 4-5 star ratings",
+      error: "AI review generation only for 3 star ratings",
     });
   }
 
