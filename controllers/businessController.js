@@ -68,6 +68,8 @@ const getBusinessById = async (req, res) => {
 
     const userId = result.rows[0].user_id;
 
+    console.log("USER ID BY BUSINESS ID ===>", userId)
+
 
     // =========================
     // SUBSCRIPTION CHECK
@@ -86,7 +88,7 @@ const getBusinessById = async (req, res) => {
 
     const user = userResult.rows[0];
 
-    console.log("Check user detil of subscription-->",user)
+    console.log("Check user detil of subscription-->", userResult);
 
     // FREE USER CHECK
     if (user.status === "pending" 
