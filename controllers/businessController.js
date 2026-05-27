@@ -68,8 +68,6 @@ const getBusinessById = async (req, res) => {
 
     const userId = result.rows[0].user_id;
 
-    console.log("USER ID BY BUSINESS ID ===>", userId)
-
 
     // =========================
     // SUBSCRIPTION CHECK
@@ -84,14 +82,23 @@ const getBusinessById = async (req, res) => {
       [userId],
     );
 
-    // console.log(userResult.rows[0]);
-
     const user = userResult.rows[0];
 
-    console.log("Check user detil of subscription-->", userResult.rows);
+    const planResult = await pool.query(
+      `
+      SELECT *
+      FROM subscription_plans
+      WHERE id = $1
+      `,
+      [user.plan_id],
+    );
+
+    const plan = planResult.rows[0];
+
 
     // FREE USER CHECK
-    if (user.status === "pending" 
+    if (
+      plan.name === "Free"
       // || user.subscription_status !== "active"
     ) {
       // COUNT GENERATED REVIEWS

@@ -7,11 +7,63 @@ const crypto = require("crypto");
 const nodemailer = require("nodemailer");
 
 // REGISTER
+// async function handleSignUp(req, res) {
+//   try {
+//     const { name, email, password } = req.body;
+
+//     console.log({ name, email, password });
+
+//     // check existing user
+//     const existingUser = await pool.query(
+//       "SELECT * FROM users WHERE email = $1",
+//       [email],
+//     );
+
+//     if (existingUser.rows.length > 0) {
+//       return res.status(400).json({
+//         message: "User already exists",
+//       });
+//     }
+
+//     // hash password
+//     const hashedPassword = await bcrypt.hash(password, 10);
+
+//     // insert user
+//     const newUser = await pool.query(
+//       `INSERT INTO users (name, email, password)
+//        VALUES ($1, $2, $3)
+//        RETURNING id, name, email`,
+//       [name, email, hashedPassword],
+//     );
+
+//     // generate token
+//     const token = jwt.sign(
+//       {
+//         userId: newUser.rows[0].id,
+//       },
+//       process.env.JWT_SECRET,
+//       {
+//         expiresIn: "7d",
+//       },
+//     );
+
+//     res.status(201).json({
+//       message: "User registered successfully",
+//       token,
+//       user: newUser.rows[0],
+//     });
+//   } catch (error) {
+//     console.log(error);
+
+//     res.status(500).json({
+//       message: "Server Error",
+//     });
+//   }
+// }
+
 async function handleSignUp(req, res) {
   try {
     const { name, email, password } = req.body;
-
-    console.log({ name, email, password });
 
     // check existing user
     const existingUser = await pool.query(
@@ -28,18 +80,80 @@ async function handleSignUp(req, res) {
     // hash password
     const hashedPassword = await bcrypt.hash(password, 10);
 
-    // insert user
+    // create user
     const newUser = await pool.query(
-      `INSERT INTO users (name, email, password)
-       VALUES ($1, $2, $3)
-       RETURNING id, name, email`,
+      `
+      INSERT INTO users (name, email, password)
+      VALUES ($1, $2, $3)
+      RETURNING id, name, email
+      `,
       [name, email, hashedPassword],
     );
 
-    // generate token
+    const user = newUser.rows[0];
+
+    // =========================
+    // GET FREE PLAN
+    // =========================
+
+    const freePlanResult = await pool.query(
+      `
+      SELECT *
+      FROM subscription_plans
+      WHERE LOWER(name) = LOWER($1)
+      LIMIT 1
+      `,
+      ["Free"],
+    );
+
+    if (freePlanResult.rows.length === 0) {
+      return res.status(500).json({
+        message: "Free subscription plan not found",
+      });
+    }
+
+    const freePlan = freePlanResult.rows[0];
+
+    // =========================
+    // INSERT SUBSCRIPTION
+    // =========================
+
+    const startDate = new Date();
+
+    const endDate = new Date();
+
+    endDate.setDate(
+      endDate.getDate() + freePlan.duration_days
+    );
+
+    await pool.query(
+      `
+      INSERT INTO subscriptions
+      (
+        user_id,
+        plan_id,
+        status,
+        start_date,
+        end_date
+      )
+      VALUES ($1, $2, $3, $4, $5)
+      `,
+      [
+        user.id,
+        freePlan.id,
+        "active",
+        startDate,
+        endDate,
+      ],
+    );
+
+    // =========================
+    // GENERATE JWT
+    // =========================
+
     const token = jwt.sign(
       {
-        userId: newUser.rows[0].id,
+        userId: user.id,
       },
       process.env.JWT_SECRET,
       {
@@ -50,7 +164,7 @@ async function handleSignUp(req, res) {
     res.status(201).json({
       message: "User registered successfully",
       token,
-      user: newUser.rows[0],
+      user,
     });
   } catch (error) {
     console.log(error);
@@ -60,6 +174,18 @@ async function handleSignUp(req, res) {
     });
   }
 }
+
+
+
+
+//============ END SING UP ===========================
+
+
+
+
+
+
+
 
 // LOGIN
 async function login(req, res) {
