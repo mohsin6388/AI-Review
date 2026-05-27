@@ -77,7 +77,7 @@ const getBusinessById = async (req, res) => {
 
     const userResult = await pool.query(
       `
-      SELECT status
+      SELECT *
       FROM subscriptions
       WHERE user_id = $1
       `,
