@@ -86,6 +86,8 @@ const getBusinessById = async (req, res) => {
 
     const user = userResult.rows[0];
 
+    console.log("Check user detil of subscription-->",user)
+
     // FREE USER CHECK
     if (user.status === "pending" 
       // || user.subscription_status !== "active"
