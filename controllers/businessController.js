@@ -1,5 +1,6 @@
 const pool  = require('../db/index');
 const QRCode = require('qrcode');
+const axios = require("axios");
 const { v4: uuidv4 } = require('uuid');
 
 // Default tags by business type
@@ -391,6 +392,47 @@ const getStats = async (req, res) => {
   }
 };
 
+
+
+
+
+
+const hanleGooglePlaces = async (req, res) => {
+  try {
+    const input = req.query.input;
+
+    if (!input) {
+      return res.status(400).json({
+        success: false,
+        message: "Input is required",
+      });
+    }
+
+    const response = await axios.get(
+      "https://maps.googleapis.com/maps/api/place/autocomplete/json",
+      {
+        params: {
+          input,
+          key: process.env.GOOGLE_MAPS_API_KEY,
+        },
+      },
+    );
+
+    res.json({
+      success: true,
+      predictions: response.data.predictions,
+    });
+  } catch (error) {
+    console.log(error);
+
+    res.status(500).json({
+      success: false,
+      message: "Server Error",
+    });
+  }
+}
+
+
 module.exports = {
   getBusiness,
   createBusiness,
@@ -398,4 +440,5 @@ module.exports = {
   getStats,
   getBusinessById,
   deleteBusinessById,
+  hanleGooglePlaces,
 };

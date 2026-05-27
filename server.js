@@ -6,6 +6,7 @@ const businessRoutes = require('./routes/business');
 const reviewRoutes = require('./routes/review');
 const paymentRoutes = require('./routes/paymentRoutes')
 const authRoutes = require('./routes/auth');
+const adminRoutes = require('./routes/admin');
 const { apiLimiter, aiGenerationLimiter, businessCreateLimiter } = require('./middleware/rateLimiter');
 
 const app = express();
@@ -39,6 +40,7 @@ app.use("/api/auth", authRoutes);
 app.use('/api/business', businessRoutes);
 app.use('/api/review', reviewRoutes);
 app.use('/api/payment', paymentRoutes);
+app.use("/api/admin", adminRoutes);
 
 // ─── Health Check ─────────────────────────────────────────────
 app.get('/health', (req, res) => {

@@ -282,9 +282,9 @@ const getReviewsByBusiness = async (req, res) => {
     // Step 2: User ka plan check karo
     const userResult = await pool.query(
       `
-      SELECT plan_type
-      FROM users
-      WHERE id = $1
+      SELECT status
+      FROM subscriptions
+      WHERE user_id = $1
       `,
       [userId],
     );
@@ -299,7 +299,7 @@ const getReviewsByBusiness = async (req, res) => {
     const userPlan = userResult.rows[0].plan_type;
 
     // Step 3: Agar free plan hai to reviews mat bhejo
-    if (userPlan === "free") {
+    if (userPlan === "pending") {
       return res.status(403).json({
         error: "Upgrade to Pro to access reviews",
       });

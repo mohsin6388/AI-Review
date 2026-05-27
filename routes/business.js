@@ -3,12 +3,13 @@ const router = express.Router();
 const authMiddleware = require('../middleware/jwt')
 const {
   getBusiness,
-  getBusinessById, 
+  getBusinessById,
   createBusiness,
   deleteBusinessById,
   getQRCode,
   getStats,
-} = require('../controllers/businessController');
+  hanleGooglePlaces,
+} = require("../controllers/businessController");
 
 // GET /api/business/:id
 router.get("/:id", authMiddleware, getBusiness);
@@ -30,5 +31,9 @@ router.get("/:id/stats", authMiddleware, getStats);
 
 //GET /api/business/:id
 router.delete("/:id", authMiddleware, deleteBusinessById);
+
+
+//GET /api/business/googlge-search
+router.get("/google-places/autocomplete", hanleGooglePlaces);
 
 module.exports = router;

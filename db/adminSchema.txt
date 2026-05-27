@@ -1,0 +1,191 @@
+-- SELECT * FROM payments
+-- SELECT * FROM subscription_plans
+-- SELECT * FROM subscriptions
+
+
+-- SELECT * FROM terms_conditions
+
+-- CREATE TABLE terms_conditions (
+--     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+
+--     content TEXT NOT NULL,
+
+--     version VARCHAR(20) DEFAULT 'v1.0',
+
+--     note TEXT,
+
+--     is_active BOOLEAN DEFAULT true,
+
+--     created_at TIMESTAMP DEFAULT NOW(),
+
+--     updated_at TIMESTAMP DEFAULT NOW()
+-- );
+
+
+
+-- INSERT INTO terms_conditions
+-- (
+--     content,
+--     version,
+--     note,
+--     is_active
+-- )
+-- VALUES
+-- (
+-- '# Terms and Conditions — Review Booster
+
+-- **Last Updated:** May 25, 2025
+
+-- ## 1. Acceptance of Terms
+
+-- By accessing and using Review Booster ("the Service"), you agree to be bound by these Terms and Conditions. If you do not agree, please discontinue use immediately.
+
+-- ## 2. Description of Service
+
+-- Review Booster provides AI-powered tools to help businesses generate, manage, and respond to Google Reviews. Our service is intended for legitimate business use only.
+
+-- ## 3. User Accounts
+
+-- - You must provide accurate and complete information when creating an account.
+-- - You are responsible for maintaining the security of your account credentials.
+-- - We reserve the right to suspend accounts that violate our policies.
+-- - Each account is for single-business use unless you hold an Enterprise plan.
+
+-- ## 4. Acceptable Use Policy
+
+-- Users agree NOT to:
+-- - Generate fake or misleading reviews for businesses they do not own or operate.
+-- - Use the service to harm, defame, or misrepresent any person or business.
+-- - Attempt to reverse-engineer, scrape, or exploit the platform AI systems.
+-- - Resell or redistribute the service without written authorization.
+
+-- ## 5. Subscription and Payments
+
+-- - Subscriptions are billed monthly or annually as selected at purchase.
+-- - All payments are processed securely via Razorpay/Stripe.
+-- - Refunds are available within 7 days of purchase for Pro plans and 3 days for Enterprise plans.
+-- - We reserve the right to modify pricing with 30 days advance notice.
+
+-- ## 6. Intellectual Property
+
+-- All AI models, interfaces, and generated content templates remain the intellectual property of Review Booster. User-generated content is owned by the respective user.
+
+-- ## 7. Privacy and Data
+
+-- We collect and process data as described in our Privacy Policy. We do not sell user data to third parties. AI-generated content may be used in anonymized form to improve our models.
+
+-- ## 8. Limitation of Liability
+
+-- Review Booster is not liable for any indirect, incidental, or consequential damages arising from use of the service. Our maximum liability is limited to the amount paid in the previous 3 months.
+
+-- ## 9. Termination
+
+-- We reserve the right to terminate accounts that violate these terms without prior notice. Users may cancel their subscription at any time via account settings.
+
+-- ## 10. Governing Law
+
+-- These terms are governed by the laws of India. Any disputes shall be resolved through arbitration in Mumbai, Maharashtra.
+
+-- ## 11. Contact
+
+-- For questions about these Terms, contact us at: **legal@reviewbooster.in**',
+
+
+-- 'v1.0',
+-- 'Initial terms added',
+-- true
+-- );
+
+
+
+
+-- CREATE TABLE privacy_policy (
+--     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+
+--     content TEXT NOT NULL,
+
+--     version VARCHAR(20) DEFAULT 'v1.0',
+
+--     note TEXT,
+
+--     is_active BOOLEAN DEFAULT true,
+
+--     created_at TIMESTAMP DEFAULT NOW(),
+
+--     updated_at TIMESTAMP DEFAULT NOW()
+-- );
+
+
+-- SELECT * FROM privacy_policy
+
+-- INSERT INTO privacy_policy
+-- (
+--     content,
+--     version,
+--     note,
+--     is_active
+-- )
+-- VALUES
+-- (
+-- '# Privacy Policy
+
+-- Welcome to Review Booster. Your privacy is important to us.
+
+-- ## Information We Collect
+
+-- We may collect the following information:
+
+-- - Name and email address
+-- - Billing and payment information
+-- - Device and browser information
+-- - Usage activity on our platform
+
+-- ## How We Use Your Information
+
+-- We use your information to:
+
+-- - Provide and improve our services
+-- - Process payments securely
+-- - Send important updates and notifications
+-- - Monitor platform security and performance
+
+-- ## Data Security
+
+-- We implement industry-standard security measures to protect your data from unauthorized access, misuse, or disclosure.
+
+-- ## Third-Party Services
+
+-- We may use trusted third-party providers for analytics, payments, and communication services.
+
+-- ## Cookies
+
+-- Our platform may use cookies to improve user experience and analytics tracking.
+
+-- ## User Rights
+
+-- Users can request access, correction, or deletion of their personal data at any time.
+
+-- ## Contact Us
+
+-- If you have questions regarding this Privacy Policy, contact us at support@reviewbooster.in
+-- ',
+
+-- 'v1.0',
+-- 'Initial terms added',
+-- true
+-- );
+
+
+
+-- CREATE TABLE business_types (
+--     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+
+--     business_type VARCHAR(100) NOT NULL UNIQUE,
+
+--     created_at TIMESTAMP DEFAULT NOW(),
+
+--     updated_at TIMESTAMP DEFAULT NOW()
+-- );
+
+
+SELECT * FROM business_types
