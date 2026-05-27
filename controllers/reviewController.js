@@ -7,9 +7,6 @@ const groq = new Groq({
 });
 
 
-// const { GoogleGenerativeAI } = require('@google/generative-ai');
-
-// const genAI = new GoogleGenerativeAI('AIzaSyA8U2ihRdwD558KuEDiEW9fD5Au2aNcoJU');
 
 const generateReview = async (req, res) => {
   const { business_id, rating, selected_tags } = req.body;
@@ -180,8 +177,9 @@ const trackRedirected = async (req, res) => {
   }
 };
 
-// POST /api/review/feedback - Save negative feedback (1-3 stars)
 
+
+// POST /api/review/feedback - Save negative feedback (1-3 stars)
 const saveFeedback = async (req, res) => {
   const { business_id, rating, feedback_text } = req.body;
 

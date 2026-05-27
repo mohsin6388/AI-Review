@@ -75,9 +75,9 @@ const getBusinessById = async (req, res) => {
 
     const userResult = await pool.query(
       `
-      SELECT plan_type, subscription_status
-      FROM users
-      WHERE id = $1
+      SELECT status
+      FROM subscriptions
+      WHERE user_id = $1
       `,
       [userId],
     );
@@ -87,7 +87,9 @@ const getBusinessById = async (req, res) => {
     const user = userResult.rows[0];
 
     // FREE USER CHECK
-    if (user.plan_type === "free" || user.subscription_status !== "active") {
+    if (user.status === "pending" 
+      // || user.subscription_status !== "active"
+    ) {
       // COUNT GENERATED REVIEWS
       const reviewCountResult = await pool.query(
         `
@@ -342,9 +344,6 @@ const getQRCode = async (req, res) => {
 
 
 
-
-
-
 // GET /api/business/:id/stats - Get business review stats
 const getStats = async (req, res) => {
   const { id } = req.params;
@@ -395,6 +394,37 @@ const getStats = async (req, res) => {
 
 
 
+;// GET /api/business/business-type -  GET BUSINESSES TYPE
+const handleGetBusinessType = async (req, res) => {
+
+  console.log("Yha tak request aa rhi hai...............")
+  try {
+    const query = `
+      SELECT *
+      FROM business_types
+      ORDER BY business_type ASC
+    `;
+
+    const result = await pool.query(query);
+
+    return res.status(200).json({
+      success: true,
+      message: "Business categories fetched successfully",
+      total: result.rows.length,
+      data: result.rows,
+    });
+  } catch (error) {
+    console.error("Get Business Types Error:", error);
+
+    return res.status(500).json({
+      success: false,
+      message: "Internal Server Error",
+    });
+  }
+}
+
+
+
 
 
 const hanleGooglePlaces = async (req, res) => {
@@ -441,4 +471,5 @@ module.exports = {
   getBusinessById,
   deleteBusinessById,
   hanleGooglePlaces,
+  handleGetBusinessType,
 };

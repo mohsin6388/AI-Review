@@ -9,10 +9,27 @@ const {
   getQRCode,
   getStats,
   hanleGooglePlaces,
+  handleGetBusinessType,
 } = require("../controllers/businessController");
+
+
+// GET /api/business/business-type
+router.get('/type/business-type', handleGetBusinessType)
+
+//GET /api/business/googlge-search
+router.get("/google-places/autocomplete", hanleGooglePlaces);
+
+
+
 
 // GET /api/business/:id
 router.get("/:id", authMiddleware, getBusiness);
+
+// GET /api/business/:id/qr
+router.get('/:id/qr', authMiddleware,  getQRCode);
+
+// GET /api/business/:id/stats
+router.get("/:id/stats", authMiddleware, getStats);
 
 
 //public oute for review purpose not authentication use here
@@ -22,18 +39,11 @@ router.get("/review/:id", getBusinessById);
 router.post("/", authMiddleware, createBusiness);
   
 
-// GET /api/business/:id/qr
-router.get('/:id/qr', authMiddleware,  getQRCode);
-
-// GET /api/business/:id/stats
-router.get("/:id/stats", authMiddleware, getStats);
 
 
 //GET /api/business/:id
 router.delete("/:id", authMiddleware, deleteBusinessById);
 
 
-//GET /api/business/googlge-search
-router.get("/google-places/autocomplete", hanleGooglePlaces);
 
 module.exports = router;
