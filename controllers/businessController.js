@@ -2,6 +2,10 @@ const pool  = require('../db/index');
 const QRCode = require('qrcode');
 const axios = require("axios");
 const { v4: uuidv4 } = require('uuid');
+const { generateAITags } = require('./reviewController');
+const { success } = require('zod');
+
+
 
 // Default tags by business type
 const DEFAULT_TAGS = {
@@ -222,6 +226,8 @@ const createBusiness = async (req, res) => {
     });
   }
 
+  console.log('kya ho rha hai yeh')
+
   const client = await pool.connect();
   try {
     await client.query("BEGIN");
@@ -244,8 +250,18 @@ const createBusiness = async (req, res) => {
     const business = businessResult.rows[0];
 
     // Insert default tags for this business type
-    const tags =
-      custom_tags || DEFAULT_TAGS[type.toLowerCase()] || DEFAULT_TAGS.default;
+    // const tags =
+    //   custom_tags || DEFAULT_TAGS[type.toLowerCase()] || DEFAULT_TAGS.default;
+
+    let tags = await generateAITags(name, type);
+
+    // console.log("AI GENERATED TAGS ===>", tags);
+
+    if (!tags.length) {
+      tags = DEFAULT_TAGS[type.toLowerCase()] || DEFAULT_TAGS.default;
+    }
+
+
     for (const tag of tags) {
       await client.query(
         `INSERT INTO tags (business_id, label, emoji) VALUES ($1, $2, $3)`,
@@ -277,6 +293,7 @@ const createBusiness = async (req, res) => {
       reviewPageUrl,
       qrCode: qrCodeDataUrl,
       message: "Business created successfully!",
+      success: true
     });
   } catch (error) {
     await client.query('ROLLBACK');
@@ -314,7 +331,7 @@ const deleteBusinessById = async (req, res) => {
 
       res.status(200).json({
         message: "Business deleted successfully",
-        message: 'success'
+        success: true
       });
     } catch (error) {
       console.error("deleteBusiness error:", error);
@@ -408,7 +425,7 @@ const getStats = async (req, res) => {
 ;// GET /api/business/business-type -  GET BUSINESSES TYPE
 const handleGetBusinessType = async (req, res) => {
 
-  console.log("Yha tak request aa rhi hai...............")
+  console.log("HandleGetBusinessType function run get business types...")
   try {
     const query = `
       SELECT *

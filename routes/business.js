@@ -17,13 +17,17 @@ const {
 router.get('/type/business-type', handleGetBusinessType)
 
 //GET /api/business/googlge-search
-router.get("/google-places/autocomplete", hanleGooglePlaces);
-
-
+// router.get("/google-places/autocomplete", hanleGooglePlaces);
 
 
 // GET /api/business/:id
 router.get("/:id", authMiddleware, getBusiness);
+
+// POST /api/business
+router.post("/", authMiddleware, createBusiness);
+
+
+
 
 // GET /api/business/:id/qr
 router.get('/:id/qr', authMiddleware,  getQRCode);
@@ -35,8 +39,6 @@ router.get("/:id/stats", authMiddleware, getStats);
 //public oute for review purpose not authentication use here
 router.get("/review/:id", getBusinessById);
 
-// POST /api/business
-router.post("/", authMiddleware, createBusiness);
   
 
 

@@ -5,61 +5,17 @@ const jwt = require("jsonwebtoken");
 
 const crypto = require("crypto");
 const nodemailer = require("nodemailer");
+const {
+  generateAccessToken,
+  generateRefreshToken,
+} = require("../middleware/generateToken");
 
-// REGISTER
-// async function handleSignUp(req, res) {
-//   try {
-//     const { name, email, password } = req.body;
 
-//     console.log({ name, email, password });
 
-//     // check existing user
-//     const existingUser = await pool.query(
-//       "SELECT * FROM users WHERE email = $1",
-//       [email],
-//     );
 
-//     if (existingUser.rows.length > 0) {
-//       return res.status(400).json({
-//         message: "User already exists",
-//       });
-//     }
-
-//     // hash password
-//     const hashedPassword = await bcrypt.hash(password, 10);
-
-//     // insert user
-//     const newUser = await pool.query(
-//       `INSERT INTO users (name, email, password)
-//        VALUES ($1, $2, $3)
-//        RETURNING id, name, email`,
-//       [name, email, hashedPassword],
-//     );
-
-//     // generate token
-//     const token = jwt.sign(
-//       {
-//         userId: newUser.rows[0].id,
-//       },
-//       process.env.JWT_SECRET,
-//       {
-//         expiresIn: "7d",
-//       },
-//     );
-
-//     res.status(201).json({
-//       message: "User registered successfully",
-//       token,
-//       user: newUser.rows[0],
-//     });
-//   } catch (error) {
-//     console.log(error);
-
-//     res.status(500).json({
-//       message: "Server Error",
-//     });
-//   }
-// }
+//===================================
+//          REGISTER
+//===================================
 
 async function handleSignUp(req, res) {
   try {
@@ -148,24 +104,63 @@ async function handleSignUp(req, res) {
     );
 
     // =========================
-    // GENERATE JWT
+    // GENERATE TOKEN
     // =========================
 
-    const token = jwt.sign(
-      {
-        userId: user.id,
-      },
-      process.env.JWT_SECRET,
-      {
-        expiresIn: "7d",
-      },
-    );
+    const accessToken = generateAccessToken(user);
+    const refreshToken = generateRefreshToken(user);
 
-    res.status(201).json({
-      message: "User registered successfully",
-      token,
-      user,
+    const tokenHash = crypto
+      .createHash("sha256")
+      .update(refreshToken)
+      .digest("hex");
+
+      //======= SAVE REFRESH TOKEN IN DB =========
+
+      await pool.query(
+        `
+  INSERT INTO refresh_tokens
+  (user_id, token_hash, expires_at)
+  VALUES ($1, $2, $3)
+  `,
+        [user.id, tokenHash, new Date(Date.now() + 30 * 24 * 60 * 60 * 1000)],
+      );
+
+
+
+
+
+    res.cookie("accessToken", accessToken, {
+      httpOnly: true,
+      secure: false, //true,
+      sameSite: "strict",
+      maxAge: 15 * 60 * 1000,
     });
+
+    res.cookie("refreshToken", refreshToken, {
+      httpOnly: true,
+      secure: false, //true,
+      sameSite: "strict",
+      maxAge: 30 * 24 * 60 * 60 * 1000,
+    });
+
+    return res.json({
+      success: true,
+      user: {
+        id: existingUser.id,
+        name: existingUser.name,
+        email: existingUser.email,
+      },
+    });
+
+
+
+    // res.status(201).json({
+    //   message: "User registered successfully",
+    //   token,
+    //   user,
+    //   refreshToken,
+    // });
   } catch (error) {
     console.log(error);
 
@@ -178,16 +173,10 @@ async function handleSignUp(req, res) {
 
 
 
-//============ END SING UP ===========================
+//================================
+//          LOGIN
+//================================
 
-
-
-
-
-
-
-
-// LOGIN
 async function login(req, res) {
   try {
     const { email, password } = req.body;
@@ -214,26 +203,67 @@ async function login(req, res) {
       });
     }
 
-    // create token
-    const token = jwt.sign(
-      {
-        userId: existingUser.id,
-      },
-      process.env.JWT_SECRET,
-      {
-        expiresIn: "7d",
-      },
+    // =========================
+    // GENERATE TOKEN
+    // =========================
+
+    const accessToken = generateAccessToken(existingUser);
+    const refreshToken = generateRefreshToken(existingUser);
+
+    const tokenHash = crypto
+      .createHash("sha256")
+      .update(refreshToken)
+      .digest("hex");
+
+    //======= SAVE REFRESH TOKEN IN DB =========
+
+    await pool.query(
+      `
+      INSERT INTO refresh_tokens
+      (user_id, token_hash, expires_at)
+      VALUES ($1, $2, $3)
+      `,
+      [
+        existingUser.id,
+        tokenHash,
+        new Date(Date.now() + 30 * 24 * 60 * 60 * 1000),
+      ],
     );
 
-    res.status(200).json({
-      message: "Login Successful",
-      token,
+
+    res.cookie("accessToken", accessToken, {
+      httpOnly: true,
+      secure: false,
+      sameSite: "strict",
+      maxAge: 15 * 60 * 1000,
+    });
+
+    res.cookie("refreshToken", refreshToken, {
+      httpOnly: true,
+      secure: false,
+      sameSite: "strict",
+      maxAge: 30 * 24 * 60 * 60 * 1000,
+    });
+
+    return res.json({
+      success: true,
       user: {
         id: existingUser.id,
         name: existingUser.name,
         email: existingUser.email,
       },
+
     });
+
+    // res.status(200).json({
+    //   message: "Login Successful",
+    //   token,
+    //   user: {
+    //     id: existingUser.id,
+    //     name: existingUser.name,
+    //     email: existingUser.email,
+    //   },
+    // });
   } catch (error) {
     console.log(error);
 
@@ -242,6 +272,175 @@ async function login(req, res) {
     });
   }
 }
+
+
+
+
+
+//=================================
+//         LOGOUT
+//=================================
+
+const logout = async (req, res) => {
+
+  const refreshToken = req.cookies.refreshToken;
+
+  const tokenHash = crypto
+    .createHash("sha256")
+    .update(refreshToken)
+    .digest("hex");
+
+  await pool.query(
+    `
+  DELETE FROM refresh_tokens
+  WHERE token_hash = $1
+  `,
+    [tokenHash],
+  );
+
+  try {
+    res.clearCookie("accessToken", {
+      httpOnly: true,
+      secure: false,  //process.env.NODE_ENV === "production",
+      sameSite: "strict",
+    });
+
+    res.clearCookie("refreshToken", {
+      httpOnly: true,
+      secure: false,  //process.env.NODE_ENV === "production",
+      sameSite: "strict",
+    });
+
+    return res.status(200).json({
+      success: true,
+      message: "Logged out successfully",
+    });
+  } catch (error) {
+    return res.status(500).json({
+      success: false,
+      message: "Logout failed",
+    });
+  }
+};
+
+
+
+
+
+//=================================
+//      REFRESH TOKEN VERIFY
+//=================================
+
+const refreshAccessToken = async (req, res) => {
+  try {
+    const refreshToken = req.cookies.refreshToken;
+
+    if (!refreshToken) {
+      return res.status(401).json({
+        success: false,
+        code: "NO_REFRESH_TOKEN",
+      });
+    }
+  
+    // Hash incoming refresh token
+    const oldTokenHash = crypto
+      .createHash("sha256")
+      .update(refreshToken)
+      .digest("hex");
+
+    // Check token exists in DB
+    const { rows } = await pool.query(
+      `
+      SELECT *
+      FROM refresh_tokens
+      WHERE token_hash = $1
+      AND expires_at > NOW()
+      `,
+      [oldTokenHash],
+    );
+
+    if (rows.length === 0) {
+      return res.status(401).json({
+        success: false,
+        code: "INVALID_REFRESH_TOKEN",
+      });
+    }
+
+    // Verify JWT signature + expiry
+    const decoded = jwt.verify(refreshToken, process.env.REFRESH_TOKEN_SECRET);
+
+    // Delete old refresh token (Rotation)
+    await pool.query(
+      `
+      DELETE FROM refresh_tokens
+      WHERE token_hash = $1
+      `,
+      [oldTokenHash],
+    );
+
+    // Generate new tokens
+    const accessToken = generateAccessToken(decoded);
+
+    const newRefreshToken = generateRefreshToken(decoded);
+
+
+    // Hash new refresh token
+    const newTokenHash = crypto
+      .createHash("sha256")
+      .update(newRefreshToken)
+      .digest("hex");
+
+    // Save new refresh token hash
+    await pool.query(
+      `
+      INSERT INTO refresh_tokens
+      (
+        user_id,
+        token_hash,
+        expires_at
+      )
+      VALUES
+      (
+        $1,
+        $2,
+        NOW() + INTERVAL '30 days'
+      )
+      `,
+      [decoded.id, newTokenHash],
+    );
+
+    // Set new access token cookie
+    res.cookie("accessToken", accessToken, {
+      httpOnly: true,
+      secure: false, //process.env.NODE_ENV === "production",
+      sameSite: "strict",
+      maxAge: 15 * 60 * 1000,
+    });
+
+    // Set new refresh token cookie
+    res.cookie("refreshToken", newRefreshToken, {
+      httpOnly: true,
+      secure: false, //process.env.NODE_ENV === "production",
+      sameSite: "strict",
+      maxAge: 30 * 24 * 60 * 60 * 1000,
+    });
+
+    return res.status(200).json({
+      success: true,
+      message: "Tokens refreshed successfully",
+    });
+  } catch (error) {
+    return res.status(401).json({
+      success: false,
+      code: "REFRESH_TOKEN_EXPIRED",
+      message: "Please login again",
+    });
+  }
+};
+
+
+
+
 
 //=======================================================
 
@@ -518,10 +717,14 @@ async function handleResetPassword(req, res) {
   }
 }
 
+
+
 module.exports = {
   handleSignUp,
   login,
+  logout,
   handleForgotPassword,
   handleVerifyOTP,
   handleResetPassword,
+  refreshAccessToken,
 };

@@ -230,8 +230,8 @@ const getAllUsers = async (req, res) => {
     // ---------------- ACTIVE USERS ----------------
     const activeUsersQuery = `
       SELECT COUNT(*) AS active_users
-      FROM subscriptions
-      WHERE status = 'active'
+      FROM payments
+      WHERE status != 'pending'
     `;
 
     // ---------------- NON ACTIVE USERS ----------------
@@ -376,16 +376,6 @@ const getAllUsers = async (req, res) => {
     });
   }
 };
-
-
-
-
-
-
-
-
-
-
 
 
 

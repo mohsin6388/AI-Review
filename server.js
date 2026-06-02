@@ -7,6 +7,7 @@ const reviewRoutes = require('./routes/review');
 const paymentRoutes = require('./routes/paymentRoutes')
 const authRoutes = require('./routes/auth');
 const adminRoutes = require('./routes/admin');
+const cookieParser = require("cookie-parser");
 const { apiLimiter, aiGenerationLimiter, businessCreateLimiter } = require('./middleware/rateLimiter');
 
 const app = express();
@@ -21,6 +22,7 @@ app.use(
     origin: [
       "http://localhost:3000",
       "https://ai-reviews-frontend-wxh3.onrender.com",
+      "https://ai-review-admin.onrender.com",
     ],
     credentials: true,
   }),
@@ -28,6 +30,7 @@ app.use(
 
 
 app.use(express.json({ limit: '10mb' }));
+app.use(cookieParser());
 app.use(express.urlencoded({ extended: true }));
 
 // ─── Rate Limiting ────────────────────────────────────────────

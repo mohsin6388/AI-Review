@@ -8,6 +8,78 @@ const groq = new Groq({
 
 
 
+
+
+const generateAITags = async (businessName, businessType) => {
+  console.log("BUSINESS NAME ===>", businessName);
+  console.log("BUSINESS TYPE ===>", businessType);
+  try {
+    const prompt = `
+You are generating customer feedback tags for a business.
+
+Business Name: ${businessName}
+Business Type: ${businessType}
+
+Generate EXACTLY 6 short customer experience tags.
+
+Rules:
+- Tags should sound like real customer feedback
+- Keep tags short (2-3 words)
+- Human readable
+- Service experience focused
+- Different from each other
+- No generic boring tags
+- Avoid:
+  - Excellent Service
+  - Amazing Experience
+  - Highly Recommended
+
+Examples:
+- Quick Response
+- Friendly Staff
+- Clean Environment
+- On-Time Delivery
+- Easy To Work With
+
+Return ONLY valid JSON like this:
+
+{
+  "tags": [
+    {
+      "label": "Quick Response",
+      "emoji": "⚡"
+    }
+  ]
+}
+`;
+
+    const completion = await groq.chat.completions.create({
+      messages: [
+        {
+          role: "user",
+          content: prompt,
+        },
+      ],
+      model: "llama-3.3-70b-versatile",
+      temperature: 1,
+      response_format: {
+        type: "json_object",
+      },
+    });
+
+    const content = completion.choices[0].message.content;
+
+    const parsedData = JSON.parse(content);
+
+    return parsedData.tags || [];
+  } catch (error) {
+    console.log("AI TAG GENERATION ERROR:", error);
+
+    return [];
+  }
+};
+
+
 // const generateReview = async (req, res) => {
 //   const { business_id, rating, selected_tags } = req.body;
 
@@ -348,20 +420,20 @@ Return ONLY valid JSON like this:
     // SAVE ALL REVIEWS
     // =========================
 
-    for (const item of reviewsArray) {
-      await pool.query(
-        `
-        INSERT INTO reviews (
-          user_id,
-          business_id,
-          review_text,
-          star_rating
-        )
-        VALUES ($1, $2, $3, $4)
-        `,
-        [user_id, business_id, item.review, rating],
-      );
-    }
+    // for (const item of reviewsArray) {
+    //   await pool.query(
+    //     `
+    //     INSERT INTO reviews (
+    //       user_id,
+    //       business_id,
+    //       review_text,
+    //       star_rating
+    //     )
+    //     VALUES ($1, $2, $3, $4)
+    //     `,
+    //     [user_id, business_id, item.review, rating],
+    //   );
+    // }
 
     // =========================
     // RESPONSE
@@ -567,4 +639,5 @@ module.exports = {
   trackRedirected,
   saveFeedback,
   getReviewsByBusiness,
+  generateAITags,
 };
