@@ -11,6 +11,66 @@ const razorpay = new Razorpay({
 
 
 
+const checkUserPaymentStatus = async (req, res) => {
+  try {
+    const { userId } = req.params;
+    console.log("Checking payment status for user ======>", userId);
+
+    const result = await pool.query(
+      `
+      SELECT
+        p.id AS payment_id,
+        p.status AS payment_status,
+        p.paid_at,
+        s.id AS subscription_id,
+        s.status AS subscription_status,
+        s.start_date,
+        s.end_date
+      FROM subscriptions s
+      LEFT JOIN payments p
+        ON p.subscription_id = s.id
+      WHERE s.user_id = $1
+      AND p.status = 'success'
+      ORDER BY p.paid_at DESC
+      LIMIT 1
+      `,
+      [userId],
+    );
+
+    if (result.rows.length === 0) {
+      return res.status(200).json({
+        success: true,
+        isPaid: false,
+        message: "No successful payment found",
+      });
+    }
+
+    const payment = result.rows[0];
+
+    const isSubscriptionActive =
+      payment.subscription_status === "active" &&
+      new Date(payment.end_date) > new Date();
+
+    return res.status(200).json({
+      success: true,
+      isPaid: true,
+      isSubscriptionActive,
+      payment,
+    });
+  } catch (error) {
+    console.error(error);
+
+    return res.status(500).json({
+      success: false,
+      error: error.message,
+    });
+  }
+};
+
+
+
+
+
 // Create Payment Order
 const createOrder = async (req, res) => {
   try {
@@ -206,172 +266,8 @@ const verifyPayment = async (req, res) => {
 
 
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-//======= Razorpay payment Create ================
-//=================================================
-// const createOrder = async (req, res) => {
-//   console.log("Payment Creating Start...............");
-//   try {
-//     const { amount, planName, user_id } = req.body;
-
-//     const options = {
-//       amount: amount * 100,
-//       currency: "INR",
-//       receipt: `receipt_${Date.now()}`,
-//     };
-
-//     const order = await razorpay.orders.create(options);
-
-//     await pool.query(
-//       `
-//       INSERT INTO payments
-//       (
-//         user_id,
-//         razorpay_order_id,
-//         amount,
-//         plan_name,
-//         status
-//       )
-//       VALUES ($1, $2, $3, $4, $5)
-//       `,
-//       [
-//         //req.user.id,
-//         user_id,
-//         order.id,
-//         amount,
-//         planName,
-//         "pending",
-//       ],
-//     );
-
-//     res.status(200).json(order);
-//   } catch (error) {
-//     console.log(error);
-
-//     res.status(500).json({
-//       error: "Order creation failed",
-//     });
-//   }
-// };
-
-//========================================================
-
-// const crypto = require("crypto");
-
-// const Razorpay = require("razorpay");
-
-// const razorpay = new Razorpay({
-//   key_id: process.env.RAZORPAY_KEY_ID,
-//   key_secret: process.env.RAZORPAY_SECRET,
-// });
-
-// const verifyPayment = async (req, res) => {
-//   try {
-//     const { razorpay_order_id, razorpay_payment_id, razorpay_signature } =
-//       req.body;
-
-//     // ---------------- VERIFY SIGNATURE ----------------
-
-//     const generated_signature = crypto
-//       .createHmac("sha256", process.env.RAZORPAY_SECRET)
-//       .update(razorpay_order_id + "|" + razorpay_payment_id)
-//       .digest("hex");
-
-//     if (generated_signature !== razorpay_signature) {
-//       return res.status(400).json({
-//         success: false,
-//         error: "Invalid signature",
-//       });
-//     }
-
-//     // ---------------- FETCH PAYMENT DETAILS ----------------
-
-//     const payment = await razorpay.payments.fetch(razorpay_payment_id);
-
-//     console.log("Payment Details", payment);
-
-//     // ---------------- PAYMENT METHOD ----------------
-
-//     const paymentMethod = payment.method;
-
-//     // Examples:
-//     // upi
-//     // card
-//     // netbanking
-//     // wallet
-
-//     // ---------------- UPDATE PAYMENT ----------------
-
-//     await pool.query(
-//       `
-//       UPDATE payments
-//       SET
-//         razorpay_payment_id = $1,
-//         razorpay_signature = $2,
-//         payment_method = $3,
-//         status = $4
-//       WHERE razorpay_order_id = $5
-//       `,
-//       [
-//         razorpay_payment_id,
-//         razorpay_signature,
-//         paymentMethod,
-//         "success",
-//         razorpay_order_id,
-//       ],
-//     );
-
-//     // ---------------- UPDATE USER ----------------
-
-//     await pool.query(
-//       `
-//       UPDATE users
-//       SET
-//         plan_type = $1,
-//         subscription_status = $2
-//       WHERE id = (
-//         SELECT user_id
-//         FROM payments
-//         WHERE razorpay_order_id = $3
-//       )
-//       `,
-//       ["pro", "active", razorpay_order_id],
-//     );
-
-//     // ---------------- RESPONSE ----------------
-
-//     res.status(200).json({
-//       success: true,
-//       paymentMethod,
-//     });
-//   } catch (error) {
-//     console.log(error);
-
-//     res.status(500).json({
-//       success: false,
-//       error: "Verification failed",
-//     });
-//   }
-// };
-
-
-
 module.exports = {
   createOrder,
   verifyPayment,
+  checkUserPaymentStatus,
 };

@@ -8,7 +8,6 @@ const {
   deleteBusinessById,
   getQRCode,
   getStats,
-  hanleGooglePlaces,
   handleGetBusinessType,
 } = require("../controllers/businessController");
 
@@ -38,9 +37,7 @@ router.get("/:id/stats", authMiddleware, getStats);
 
 //public oute for review purpose not authentication use here
 router.get("/review/:id", getBusinessById);
-
   
-
 
 
 //GET /api/business/:id

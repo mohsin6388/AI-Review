@@ -59,7 +59,8 @@ const DEFAULT_TAGS = {
 
 const getBusinessById = async (req, res) => {
   const { id } = req.params;
-  // const userId = req.user.id;
+
+  console.log("Get Business By ID called with ID:", id);
 
   try {
 
@@ -425,7 +426,6 @@ const getStats = async (req, res) => {
 ;// GET /api/business/business-type -  GET BUSINESSES TYPE
 const handleGetBusinessType = async (req, res) => {
 
-  console.log("HandleGetBusinessType function run get business types...")
   try {
     const query = `
       SELECT *
@@ -454,43 +454,6 @@ const handleGetBusinessType = async (req, res) => {
 
 
 
-
-const hanleGooglePlaces = async (req, res) => {
-  try {
-    const input = req.query.input;
-
-    if (!input) {
-      return res.status(400).json({
-        success: false,
-        message: "Input is required",
-      });
-    }
-
-    const response = await axios.get(
-      "https://maps.googleapis.com/maps/api/place/autocomplete/json",
-      {
-        params: {
-          input,
-          key: process.env.GOOGLE_MAPS_API_KEY,
-        },
-      },
-    );
-
-    res.json({
-      success: true,
-      predictions: response.data.predictions,
-    });
-  } catch (error) {
-    console.log(error);
-
-    res.status(500).json({
-      success: false,
-      message: "Server Error",
-    });
-  }
-}
-
-
 module.exports = {
   getBusiness,
   createBusiness,
@@ -498,6 +461,5 @@ module.exports = {
   getStats,
   getBusinessById,
   deleteBusinessById,
-  hanleGooglePlaces,
   handleGetBusinessType,
 };

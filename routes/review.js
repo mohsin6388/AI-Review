@@ -23,4 +23,14 @@ router.post('/feedback', saveFeedback);
 // GET /api/review/:businessId
 router.get('/:businessId', getReviewsByBusiness);
 
+
+
+//========================================
+//        AUTO EPLY REVIEW
+//========================================
+
+// router.post("/reviews/run", reviewController.manualRun);
+// router.get("/reviews/stats", reviewController.getStats);
+// router.get("/reviews/replies", reviewController.getReplies);
+
 module.exports = router;
