@@ -420,6 +420,87 @@ const saveFeedback = async (req, res) => {
 };
 
 
+
+//POST /api/review/save-reviews - Save reviews that were redirected to Google
+
+const saveRedirectReviews = async (req, res) => {
+  const { session_id, review_text } = req.body;
+
+  if (!session_id) {
+    return res.status(400).json({
+      error: "session_id is required",
+    });
+  }
+
+  try {
+    // STEP 1 → GET GENERATED REVIEWS AND BUSINESS ID
+    const sessionResult = await pool.query(
+      `
+      SELECT business_id, rating
+      FROM review_sessions
+      WHERE id = $1
+      `,
+      [session_id],
+    );
+
+    if (sessionResult.rows.length === 0) {
+      return res.status(404).json({
+        error: "Session not found",
+      });
+    }
+
+    const { business_id, rating } = sessionResult.rows[0];
+
+    // const reviewsArray = JSON.parse(generated_review);
+
+    // STEP 2 → GET USER ID
+    const businessResult = await pool.query(
+      `
+      SELECT user_id
+      FROM businesses
+      WHERE id = $1
+      `,
+      [business_id],
+    );
+
+    const user_id = businessResult.rows[0].user_id;
+
+    // BusinessID, UserID, Review Text, Star Rating IN Review Table
+
+    await pool.query(
+      `
+      INSERT INTO reviews (
+        business_id,
+        user_id,
+        review_text,
+        star_rating
+      )
+      VALUES ($1, $2, $3, $4)
+      `,
+      [business_id, user_id, review_text, rating],
+    );
+
+    res.json({
+      success: true,
+      message: "Review saved successfully",
+    });
+  } catch (error) {
+    console.error("saveRedirectReviews error:", error);
+
+    res.status(500).json({
+      error: "Internal server error",
+    });
+  }
+}
+
+
+
+
+
+
+
+
+
 const getReviewsByBusiness = async (req, res) => {
   try {
     const { businessId } = req.params;
@@ -445,33 +526,26 @@ const getReviewsByBusiness = async (req, res) => {
 
     const userId = businessResult.rows[0].user_id;
 
-    // Step 2: User ka plan check karo
+
     const userResult = await pool.query(
       `
       SELECT status
-      FROM subscriptions
+      FROM payments
       WHERE user_id = $1
       `,
       [userId],
     );
 
-    // Agar user nahi mila
-    if (userResult.rows.length === 0) {
-      return res.status(404).json({
-        error: "User not found",
-      });
-    }
 
-    const userPlan = userResult.rows[0].plan_type;
+     if (userResult.rows.length === 0) {
+       return res.status(403).json({
+         error: "Upgrade to Pro to access reviews",
+       });
+     }
 
-    // Step 3: Agar free plan hai to reviews mat bhejo
-    if (userPlan === "pending") {
-      return res.status(403).json({
-        error: "Upgrade to Pro to access reviews",
-      });
-    }
 
-    // Step 4: Agar pro hai to reviews bhejo
+     const userPlan = userResult.rows[0].status;
+
     const result = await pool.query(
       `
       SELECT *
@@ -549,4 +623,5 @@ module.exports = {
   saveFeedback,
   getReviewsByBusiness,
   generateAITags,
+  saveRedirectReviews
 };

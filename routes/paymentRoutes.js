@@ -13,6 +13,6 @@ const authMiddleware = require("../middleware/jwt");
 router.post("/create-order", authMiddleware,  createOrder);
 router.post("/verify-payment", authMiddleware,  verifyPayment);
 
-router.get("/check-payment", authMiddleware, checkUserPaymentStatus);
+router.get("/check-payment/:userId", authMiddleware, checkUserPaymentStatus);
 
 module.exports = router;

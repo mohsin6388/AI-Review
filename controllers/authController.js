@@ -147,9 +147,9 @@ async function handleSignUp(req, res) {
     return res.json({
       success: true,
       user: {
-        id: existingUser.id,
-        name: existingUser.name,
-        email: existingUser.email,
+        id: user.id,
+        name: user.name,
+        email: user.email,
       },
     });
 
@@ -255,15 +255,6 @@ async function login(req, res) {
 
     });
 
-    // res.status(200).json({
-    //   message: "Login Successful",
-    //   token,
-    //   user: {
-    //     id: existingUser.id,
-    //     name: existingUser.name,
-    //     email: existingUser.email,
-    //   },
-    // });
   } catch (error) {
     console.log(error);
 

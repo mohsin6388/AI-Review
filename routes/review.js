@@ -6,6 +6,7 @@ const {
   trackRedirected,
   saveFeedback,
   getReviewsByBusiness,
+  saveRedirectReviews,
 } = require("../controllers/reviewController");
 
 // POST /api/review/generate
@@ -20,8 +21,13 @@ router.post('/session/:id/redirected', trackRedirected);
 // POST /api/review/feedback
 router.post('/feedback', saveFeedback);
 
+//POST /api/review/save
+router.post("/save-review", saveRedirectReviews);
+
 // GET /api/review/:businessId
 router.get('/:businessId', getReviewsByBusiness);
+
+
 
 
 

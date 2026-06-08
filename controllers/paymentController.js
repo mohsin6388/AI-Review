@@ -51,6 +51,9 @@ const checkUserPaymentStatus = async (req, res) => {
       payment.subscription_status === "active" &&
       new Date(payment.end_date) > new Date();
 
+      console.log("Payment found:======>", payment);
+      console.log("Is subscription active?====>", isSubscriptionActive);
+
     return res.status(200).json({
       success: true,
       isPaid: true,
