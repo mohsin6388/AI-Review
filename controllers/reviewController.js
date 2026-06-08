@@ -556,6 +556,7 @@ const getReviewsByBusiness = async (req, res) => {
       [businessId],
     );
 
+
     res.json({
       reviews: result.rows,
     });
