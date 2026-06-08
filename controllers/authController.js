@@ -210,6 +210,9 @@ async function login(req, res) {
     const accessToken = generateAccessToken(existingUser);
     const refreshToken = generateRefreshToken(existingUser);
 
+    console.log(accessToken);
+    console.log(refreshToken);
+
     const tokenHash = crypto
       .createHash("sha256")
       .update(refreshToken)

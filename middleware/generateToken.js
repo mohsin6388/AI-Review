@@ -10,7 +10,7 @@ const generateAccessToken = (user) => {
     },
     process.env.ACCESS_TOKEN_SECRET,
     {
-      expiresIn: "1m",
+      expiresIn: "7d",
     },
   );
 };
