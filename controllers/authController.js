@@ -133,14 +133,14 @@ async function handleSignUp(req, res) {
     res.cookie("accessToken", accessToken, {
       httpOnly: true,
       secure: true, //true,
-      sameSite: "strict",
+      sameSite: "none",
       maxAge: 15 * 60 * 1000,
     });
 
     res.cookie("refreshToken", refreshToken, {
       httpOnly: true,
       secure: true, //true,
-      sameSite: "strict",
+      sameSite: "none",
       maxAge: 30 * 24 * 60 * 60 * 1000,
     });
 
@@ -237,14 +237,14 @@ async function login(req, res) {
     res.cookie("accessToken", accessToken, {
       httpOnly: true,
       secure: true,
-      sameSite: "strict",
+      sameSite: "none",
       maxAge: 15 * 60 * 1000,
     });
 
     res.cookie("refreshToken", refreshToken, {
       httpOnly: true,
       secure: true,
-      sameSite: "strict",
+      sameSite: "none",
       maxAge: 30 * 24 * 60 * 60 * 1000,
     });
 
