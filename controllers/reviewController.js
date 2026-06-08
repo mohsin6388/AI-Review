@@ -623,5 +623,5 @@ module.exports = {
   saveFeedback,
   getReviewsByBusiness,
   generateAITags,
-  saveRedirectReviews
+  saveRedirectReviews,
 };
