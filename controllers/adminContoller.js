@@ -52,6 +52,7 @@ async function handleAdminLogin(req, res) {
 
     res.status(200).json({
       message: "Login Successful",
+      success: true,
       token,
       user: {
         id: existingUser.id,

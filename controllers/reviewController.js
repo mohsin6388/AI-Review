@@ -278,25 +278,6 @@ Return ONLY valid JSON like this:
     const user_id = userByBusiness.rows[0].user_id;
 
     // =========================
-    // SAVE ALL REVIEWS
-    // =========================
-
-    // for (const item of reviewsArray) {
-    //   await pool.query(
-    //     `
-    //     INSERT INTO reviews (
-    //       user_id,
-    //       business_id,
-    //       review_text,
-    //       star_rating
-    //     )
-    //     VALUES ($1, $2, $3, $4)
-    //     `,
-    //     [user_id, business_id, item.review, rating],
-    //   );
-    // }
-
-    // =========================
     // RESPONSE
     // =========================
 
@@ -505,8 +486,6 @@ const getReviewsByBusiness = async (req, res) => {
   try {
     const { businessId } = req.params;
 
-    console.log("ha yeh chl rha hai ---> ",businessId);
-
     // Step 1: Business ka owner/user nikalo
     const businessResult = await pool.query(
       `
@@ -527,24 +506,41 @@ const getReviewsByBusiness = async (req, res) => {
     const userId = businessResult.rows[0].user_id;
 
 
-    const userResult = await pool.query(
-      `
-      SELECT status
-      FROM payments
-      WHERE user_id = $1
-      `,
-      [userId],
-    );
+   const subscriptionResult = await pool.query(
+     `
+  SELECT
+  s.*,
+  sp.name
+FROM subscriptions s
+JOIN subscription_plans sp
+ON sp.id = s.plan_id
+WHERE s.user_id = $1
+AND s.status = 'active'
+AND (
+  s.end_date IS NULL
+  OR s.end_date > NOW()
+)
+LIMIT 1
+  `,
+     [userId],
+   );
+
+   const subscription = subscriptionResult.rows[0];
+
+   if (!subscription) {
+     return res.status(403).json({
+       error: "Active subscription required",
+     });
+   }
+
+  if (subscription.name !== "starter" && subscription.name !== "premium") {
+    return res.status(403).json({
+      error: "Upgrade your plan",
+    });
+  }
 
 
-     if (userResult.rows.length === 0) {
-       return res.status(403).json({
-         error: "Upgrade to Pro to access reviews",
-       });
-     }
-
-
-     const userPlan = userResult.rows[0].status;
+     const userPlan = subscriptionResult.rows[0].status;
 
     const result = await pool.query(
       `

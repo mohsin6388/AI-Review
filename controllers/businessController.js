@@ -63,7 +63,6 @@ const getBusinessById = async (req, res) => {
   console.log("Get Business By ID called with ID:", id);
 
   try {
-
     const result = await pool.query(
       `SELECT user_id 
        FROM businesses
@@ -73,61 +72,130 @@ const getBusinessById = async (req, res) => {
 
     const userId = result.rows[0].user_id;
 
+    const subscriptionResult = await pool.query(
+      `
+  SELECT
+    s.*,
+    sp.name AS plan_name
+  FROM subscriptions s
+  JOIN subscription_plans sp
+    ON sp.id = s.plan_id
+  WHERE s.user_id = $1
+    AND s.status = 'active'
+    AND (
+      s.end_date IS NULL
+      OR s.end_date > NOW()
+    )
+  LIMIT 1
+  `,
+      [userId],
+    );
+
+    if (subscriptionResult.rows.length === 0) {
+      return res.status(403).json({
+        success: false,
+        upgradeRequired: true,
+        message: "No active subscription found",
+      });
+    }
+
+    const subscription = subscriptionResult.rows[0];
+
+    // =========================
+    // MONTHLY GENERATED REVIEWS
+    // =========================
+
+    const reviewCountResult = await pool.query(
+      `
+  SELECT COUNT(*) AS total_reviews
+  FROM review_sessions rs
+  JOIN businesses b
+    ON b.id = rs.business_id
+  WHERE b.user_id = $1
+    AND rs.created_at >= NOW() - INTERVAL '30 days'
+  `,
+      [userId],
+    );
+
+    const totalReviews = Number(reviewCountResult.rows[0].total_reviews);
+
+    // =========================
+    // PLAN LIMIT CHECK
+    // =========================
+
+    const planName = subscription.plan_name.toLowerCase();
+
+    if (planName === "free" && totalReviews >= 15) {
+      return res.status(403).json({
+        success: false,
+        upgradeRequired: true,
+        message:
+          "Free plan limit reached (15 reviews/month). Upgrade to Starter.",
+      });
+    }
+
+    if (planName === "starter" && totalReviews >= 50) {
+      return res.status(403).json({
+        success: false,
+        upgradeRequired: true,
+        message:
+          "Starter plan limit reached (50 reviews/month). Upgrade to Premium.",
+      });
+    }
 
     // =========================
     // SUBSCRIPTION CHECK
     // =========================
 
-    const userResult = await pool.query(
-      `
-      SELECT *
-      FROM subscriptions
-      WHERE user_id = $1
-      `,
-      [userId],
-    );
+    // const userResult = await pool.query(
+    //   `
+    //   SELECT *
+    //   FROM subscriptions
+    //   WHERE user_id = $1
+    //   `,
+    //   [userId],
+    // );
 
-    const user = userResult.rows[0];
+    // const user = userResult.rows[0];
 
-    const planResult = await pool.query(
-      `
-      SELECT *
-      FROM subscription_plans
-      WHERE id = $1
-      `,
-      [user.plan_id],
-    );
+    // const planResult = await pool.query(
+    //   `
+    //   SELECT *
+    //   FROM subscription_plans
+    //   WHERE id = $1
+    //   `,
+    //   [user.plan_id],
+    // );
 
-    const plan = planResult.rows[0];
+    // const plan = planResult.rows[0];
 
+    // // FREE USER CHECK
+    // if (
+    //   plan.name === "Free"
+    //   // || user.subscription_status !== "active"
+    // ) {
+    //   // COUNT GENERATED REVIEWS
+    //   const reviewCountResult = await pool.query(
+    //     `
+    //    SELECT COALESCE(SUM(total_reviews_generated), 0) AS total_reviews
+    //    FROM businesses
+    //    WHERE user_id = $1
+    //     `,
+    //     [userId],
+    //   );
 
-    // FREE USER CHECK
-    if (
-      plan.name === "Free"
-      // || user.subscription_status !== "active"
-    ) {
-      // COUNT GENERATED REVIEWS
-      const reviewCountResult = await pool.query(
-        `
-       SELECT COALESCE(SUM(total_reviews_generated), 0) AS total_reviews
-       FROM businesses
-       WHERE user_id = $1
-        `,
-        [userId],
-      );
+    //   const totalReviews = parseInt(reviewCountResult.rows[0].total_reviews);
 
-      const totalReviews = parseInt(reviewCountResult.rows[0].total_reviews);
-
-      // BLOCK USER
-      if (totalReviews >= 15) {
-        return res.status(403).json({
-          success: false,
-          upgradeRequired: true,
-          message:
-            "Free review limit exceeded. Please upgrade your subscription.",
-        });
-      }
-    }
+    //   // BLOCK USER
+    //   if (totalReviews >= 15) {
+    //     return res.status(403).json({
+    //       success: false,
+    //       upgradeRequired: true,
+    //       message:
+    //         "Free review limit exceeded. Please upgrade your subscription.",
+    //     });
+    //   }
+    // }
 
     // =========================
     // BUSINESS FETCH
@@ -139,7 +207,7 @@ const getBusinessById = async (req, res) => {
       FROM businesses
       WHERE id = $1
       `,
-      [id],
+      [userId],
     );
 
     if (businessResult.rows.length === 0) {

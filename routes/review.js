@@ -9,6 +9,8 @@ const {
   saveRedirectReviews,
 } = require("../controllers/reviewController");
 
+const { requireSubscription } = require("../middleware/checkSubscription")
+
 // POST /api/review/generate
 router.post('/generate', generateReview);
 

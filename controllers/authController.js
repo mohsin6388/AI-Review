@@ -9,6 +9,7 @@ const {
   generateAccessToken,
   generateRefreshToken,
 } = require("../middleware/generateToken");
+const { success } = require("zod");
 
 
 
@@ -30,6 +31,7 @@ async function handleSignUp(req, res) {
     if (existingUser.rows.length > 0) {
       return res.status(400).json({
         message: "User already exists",
+        success: false
       });
     }
 
@@ -65,6 +67,7 @@ async function handleSignUp(req, res) {
     if (freePlanResult.rows.length === 0) {
       return res.status(500).json({
         message: "Free subscription plan not found",
+        success: false
       });
     }
 
@@ -146,6 +149,7 @@ async function handleSignUp(req, res) {
 
     return res.json({
       success: true,
+      message: "Login Successfull",
       user: {
         id: user.id,
         name: user.name,
@@ -189,6 +193,7 @@ async function login(req, res) {
     if (user.rows.length === 0) {
       return res.status(400).json({
         message: "Invalid Email or Password",
+        success: false
       });
     }
 
@@ -200,6 +205,7 @@ async function login(req, res) {
     if (!isMatch) {
       return res.status(400).json({
         message: "Invalid Email or Password",
+        success: false
       });
     }
 
@@ -250,6 +256,7 @@ async function login(req, res) {
 
     return res.json({
       success: true,
+      message: "Sign Up Successful",
       user: {
         id: existingUser.id,
         name: existingUser.name,
