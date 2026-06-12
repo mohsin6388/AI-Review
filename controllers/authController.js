@@ -158,13 +158,6 @@ async function handleSignUp(req, res) {
     });
 
 
-
-    // res.status(201).json({
-    //   message: "User registered successfully",
-    //   token,
-    //   user,
-    //   refreshToken,
-    // });
   } catch (error) {
     console.log(error);
 

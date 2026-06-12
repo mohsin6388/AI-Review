@@ -27,19 +27,20 @@ const checkUserPaymentStatus = async (req, res) => {
     p.status AS payment_status,
     p.amount,
     p.paid_at,
-    p.plan_id,
 
-    sp.name AS plan_name
+    sp.name AS plan_name,        -- ✅ ab subscription se aayega
+    sp.price AS plan_price,
+    sp.max_businesses
 
   FROM subscriptions s
+
+  LEFT JOIN subscription_plans sp
+    ON sp.id = s.plan_id         -- ✅ directly subscriptions se join
 
   LEFT JOIN payments p
     ON p.user_id = s.user_id
    AND p.plan_id = s.plan_id
    AND p.status = 'success'
-
-  LEFT JOIN subscription_plans sp
-    ON sp.id = p.plan_id
 
   WHERE s.user_id = $1
 
@@ -47,32 +48,43 @@ const checkUserPaymentStatus = async (req, res) => {
   LIMIT 1
   `,
       [userId],
-    ); 
+    );
 
-    // const result = await pool.query(
-    //   `
-    //   SELECT
-    //     s.id AS subscription_id,
-    //     s.status AS subscription_status,
-    //     s.start_date,
-    //     s.end_date,
+  //   const result = await pool.query(
+  //     `
+  // SELECT
+  //   s.id AS subscription_id,
+  //   s.status AS subscription_status,
+  //   s.start_date,
+  //   s.end_date,
 
-    //     p.id AS payment_id,
-    //     p.status AS payment_status,
-    //     p.amount,
-    //     p.paid_at,
-    //     p.plan_id
-    //   FROM subscriptions s
-    //   LEFT JOIN payments p
-    //     ON p.user_id = s.user_id
-    //    AND p.plan_id = s.plan_id
-    //    AND p.status = 'success'
-    //   WHERE s.user_id = $1
-    //   ORDER BY p.paid_at DESC NULLS LAST
-    //   LIMIT 1
-    //   `,
-    //   [userId],
-    // );
+  //   p.id AS payment_id,
+  //   p.status AS payment_status,
+  //   p.amount,
+  //   p.paid_at,
+  //   p.plan_id,
+
+  //   sp.name AS plan_name
+
+  // FROM subscriptions s
+
+  // LEFT JOIN payments p
+  //   ON p.user_id = s.user_id
+  //  AND p.plan_id = s.plan_id
+  //  AND p.status = 'success'
+
+  // LEFT JOIN subscription_plans sp
+  //   ON sp.id = p.plan_id
+
+  // WHERE s.user_id = $1
+
+  // ORDER BY p.paid_at DESC NULLS LAST
+  // LIMIT 1
+  // `,
+  //     [userId],
+  //   ); 
+
+    
 
     if (result.rows.length === 0) {
       return res.status(200).json({

@@ -295,10 +295,54 @@ const createBusiness = async (req, res) => {
     });
   }
 
-  console.log('kya ho rha hai yeh')
-
   const client = await pool.connect();
+
   try {
+    // ✅ STEP 1: User ki current businesses count nikalo
+    const businessCountResult = await client.query(
+      `SELECT COUNT(*) as count FROM businesses WHERE user_id = $1`,
+      [user_id],
+    );
+    const currentBusinessCount = parseInt(businessCountResult.rows[0].count);
+
+    const subscriptionResult = await client.query(
+    `SELECT s.id, s.status, s.end_date, sp.name as plan_name, sp.max_businesses
+     FROM subscriptions s
+     JOIN subscription_plans sp ON s.plan_id = sp.id
+     WHERE s.user_id = $1 AND s.status = 'active'
+     ORDER BY s.created_at DESC
+     LIMIT 1`,
+      [user_id],
+    );
+
+    // ✅ STEP 3: Plan ke according limit set karo
+    const PLAN_LIMITS = {
+      free: 1,
+      starter: 1,
+      premium: 2,
+      // aur plans add karte raho
+    };
+
+
+    let allowedBusinesses = 1; // default limit (no active plan = free)
+
+    if (subscriptionResult.rows.length > 0) {
+      const activePlan = subscriptionResult.rows[0];
+      const planName = activePlan.plan_name.toLowerCase();
+      allowedBusinesses = PLAN_LIMITS[planName] ?? 1;
+    }
+
+    // ✅ STEP 4: Limit check karo
+    if (currentBusinessCount >= allowedBusinesses) {
+      return res.status(403).json({
+        error: `Your current plan allows only ${allowedBusinesses} business(es). Please upgrade your plan to add more.`,
+        currentCount: currentBusinessCount,
+        allowedLimit: allowedBusinesses,
+        success: false,
+      });
+    }
+
+
     await client.query("BEGIN");
 
     const google_review_url = `https://search.google.com/local/writereview?placeid=${google_place_id}`;
@@ -318,10 +362,6 @@ const createBusiness = async (req, res) => {
 
     const business = businessResult.rows[0];
 
-    // Insert default tags for this business type
-    // const tags =
-    //   custom_tags || DEFAULT_TAGS[type.toLowerCase()] || DEFAULT_TAGS.default;
-
     let tags = await generateAITags(name, type);
 
     // console.log("AI GENERATED TAGS ===>", tags);
@@ -329,7 +369,6 @@ const createBusiness = async (req, res) => {
     if (!tags.length) {
       tags = DEFAULT_TAGS[type.toLowerCase()] || DEFAULT_TAGS.default;
     }
-
 
     for (const tag of tags) {
       await client.query(
@@ -362,7 +401,7 @@ const createBusiness = async (req, res) => {
       reviewPageUrl,
       qrCode: qrCodeDataUrl,
       message: "Business created successfully!",
-      success: true
+      success: true,
     });
   } catch (error) {
     await client.query('ROLLBACK');
