@@ -498,6 +498,8 @@ const getReviewsByBusiness = async (req, res) => {
 
     // Agar business exist nahi karta
     if (businessResult.rows.length === 0) {
+      console.log("== yeh chla why --> ")
+      console.log(businessResult.row)
       return res.status(404).json({
         error: "Business not found",
       });
