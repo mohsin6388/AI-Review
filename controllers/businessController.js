@@ -60,8 +60,6 @@ const DEFAULT_TAGS = {
 const getBusinessById = async (req, res) => {
   const { id } = req.params;
 
-  console.log("Get Business By ID called with ID:", id);
-
   try {
     const result = await pool.query(
       `SELECT user_id 
@@ -69,6 +67,7 @@ const getBusinessById = async (req, res) => {
        WHERE id = $1`,
       [id],
     );
+
 
     const userId = result.rows[0].user_id;
 
@@ -90,6 +89,7 @@ const getBusinessById = async (req, res) => {
   `,
       [userId],
     );
+
 
     if (subscriptionResult.rows.length === 0) {
       return res.status(403).json({
@@ -143,59 +143,7 @@ const getBusinessById = async (req, res) => {
       });
     }
 
-    // =========================
-    // SUBSCRIPTION CHECK
-    // =========================
-
-    // const userResult = await pool.query(
-    //   `
-    //   SELECT *
-    //   FROM subscriptions
-    //   WHERE user_id = $1
-    //   `,
-    //   [userId],
-    // );
-
-    // const user = userResult.rows[0];
-
-    // const planResult = await pool.query(
-    //   `
-    //   SELECT *
-    //   FROM subscription_plans
-    //   WHERE id = $1
-    //   `,
-    //   [user.plan_id],
-    // );
-
-    // const plan = planResult.rows[0];
-
-    // // FREE USER CHECK
-    // if (
-    //   plan.name === "Free"
-    //   // || user.subscription_status !== "active"
-    // ) {
-    //   // COUNT GENERATED REVIEWS
-    //   const reviewCountResult = await pool.query(
-    //     `
-    //    SELECT COALESCE(SUM(total_reviews_generated), 0) AS total_reviews
-    //    FROM businesses
-    //    WHERE user_id = $1
-    //     `,
-    //     [userId],
-    //   );
-
-    //   const totalReviews = parseInt(reviewCountResult.rows[0].total_reviews);
-
-    //   // BLOCK USER
-    //   if (totalReviews >= 15) {
-    //     return res.status(403).json({
-    //       success: false,
-    //       upgradeRequired: true,
-    //       message:
-    //         "Free review limit exceeded. Please upgrade your subscription.",
-    //     });
-    //   }
-    // }
+   
 
     // =========================
     // BUSINESS FETCH
@@ -205,10 +153,11 @@ const getBusinessById = async (req, res) => {
       `
       SELECT *
       FROM businesses
-      WHERE id = $1
+      WHERE user_id = $1
       `,
       [userId],
     );
+
 
     if (businessResult.rows.length === 0) {
       return res.status(404).json({
