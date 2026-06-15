@@ -236,7 +236,9 @@ const getBusiness = async (req, res) => {
 
 // POST /api/business - Create new business
 const createBusiness = async (req, res) => {
-  const { name, type, google_place_id, owner_email, custom_tags, user_id } = req.body;
+  const { name, type, google_place_id, owner_email, custom_tags, user_id, lang } = req.body;
+
+  console.log("Language===>", lang)
 
   if (!name || !type || !google_place_id || !user_id) {
     return res.status(400).json({
@@ -293,8 +295,10 @@ const createBusiness = async (req, res) => {
 
 
     await client.query("BEGIN");
+      
+      const google_review_url = `https://search.google.com/local/writereview?placeid=${google_place_id}`;
 
-    const google_review_url = `https://search.google.com/local/writereview?placeid=${google_place_id}`;
+
 
     const businessResult = await client.query(
       `INSERT INTO businesses (name, type, google_place_id, google_review_url, owner_email, user_id)
@@ -329,7 +333,21 @@ const createBusiness = async (req, res) => {
     await client.query("COMMIT");
 
     // Generate QR code
-    const reviewPageUrl = `https://ai-reviews-frontend-wxh3.onrender.com/review/${business.id}`;
+
+    let reviewPageUrl;
+
+    if(lang === "english"){
+
+      const reviewPageUrl = `https://review-rocket-english.onrender.com/review/${business.id}`;
+
+      
+    } else {
+      
+      const reviewPageUrl = `https://ai-reviews-frontend-wxh3.onrender.com/review/${business.id}`;
+
+    }
+
+
     // Save url
     // save again in same table
     await client.query(

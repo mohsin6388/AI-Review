@@ -21,7 +21,7 @@ app.use(
   cors({
     origin: [
       "http://localhost:3000",
-      "http://localhost:5000",
+      "https://review-rocket-english.onrender.com",
       "https://ai-reviews-frontend-wxh3.onrender.com",
       "https://ai-review-admin.onrender.com",
     ],
