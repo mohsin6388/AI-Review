@@ -4,6 +4,7 @@ const axios = require("axios");
 const { v4: uuidv4 } = require('uuid');
 const { generateAITags } = require('./reviewController');
 const { success } = require('zod');
+const FRONTEND_URL = "http://157.173.221.138";
 
 
 
@@ -338,12 +339,12 @@ const createBusiness = async (req, res) => {
 
     if(lang === "english"){
 
-      reviewPageUrl = `https://review-rocket-english.onrender.com/review/${business.id}`;
+      reviewPageUrl = `${FRONTEND_URL}/review/${business.id}`;
 
       
     } else {
       
-      reviewPageUrl = `https://ai-reviews-frontend-wxh3.onrender.com/review/${business.id}`;
+      reviewPageUrl = `${FRONTEND_URL}/review/${business.id}`;
 
     }
 
