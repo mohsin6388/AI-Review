@@ -338,12 +338,12 @@ const createBusiness = async (req, res) => {
 
     if(lang === "english"){
 
-      const reviewPageUrl = `https://review-rocket-english.onrender.com/review/${business.id}`;
+      reviewPageUrl = `https://review-rocket-english.onrender.com/review/${business.id}`;
 
       
     } else {
       
-      const reviewPageUrl = `https://ai-reviews-frontend-wxh3.onrender.com/review/${business.id}`;
+      reviewPageUrl = `https://ai-reviews-frontend-wxh3.onrender.com/review/${business.id}`;
 
     }
 
